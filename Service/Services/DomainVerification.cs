@@ -434,6 +434,7 @@ namespace EmailAddressVerificationAPI.Services
 
 
                      var catchAllStatus = await _smtpServerVerification.IsCatchAllAsync(domain, _mxRecords.FirstOrDefault());
+                Console.WriteLine(catchAllStatus);
 
                 if (catchAllStatus == true)
                 {

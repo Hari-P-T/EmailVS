@@ -208,6 +208,7 @@ namespace EmailAddressVerificationAPI.Services
                 await SendAsync("QUIT\r\n");
 
                 var code = rcptResponse.Substring(0, 3);
+                Console.WriteLine("Catch All staus code "+code);
                 return code == "250" || code == "251" || code == "252";
             }
             catch

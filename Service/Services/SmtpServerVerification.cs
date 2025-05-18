@@ -180,14 +180,28 @@ namespace EmailAddressVerificationAPI.Services
         }
 
 
+        private string GenerateRandomEmail(string domain)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            var localPart = new char[10];
+            for (int i = 0; i < localPart.Length; i++)
+                localPart[i] = chars[random.Next(chars.Length)];
+            return new string(localPart) + "@" + domain;
+        }
+
         //catch all method
         public async Task<bool?> IsCatchAllAsync(string domain, string mxHost)
         {
-            string testAddress = $"nonexistent{Guid.NewGuid():N}@{domain}";
+            for(int i = 0; i < 4; i++)
+            {
+                string testAddress = GenerateRandomEmail(domain);
+                var res =await CheckSingleMXAsync(testAddress, domain, mxHost);
+                    if (res == false) return false;
 
-            var res =await CheckSingleMXAsync(testAddress, domain, mxHost);
+            }
 
-            return res;
+            return true;
             //using var client = new TcpClient();
             //try
             //{

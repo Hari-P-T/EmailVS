@@ -194,11 +194,11 @@ namespace EmailAddressVerificationAPI.Services
             }
         }
 
-        private Task<bool?> DKIMCheck()
+        private async Task<bool?> DKIMCheck()
         {
             try
             {
-                return _dkimCheck.HasAnyDkimRecord(_parentDomain);
+                return await _dkimCheck.HasAnyDkimRecord(_parentDomain);
             }
             catch (Exception)
             {
@@ -426,7 +426,7 @@ namespace EmailAddressVerificationAPI.Services
                     {
                         Name = "HasDkimRecords",
                         WeightageAllocated = 10,
-                        IsVerified = DKIMCheck().Result
+                        IsVerified = await DKIMCheck()
                     };
 
                     dkimCheck.ObtainedScore = (dkimCheck.IsVerified==true)?dkimCheck.WeightageAllocated : 0;

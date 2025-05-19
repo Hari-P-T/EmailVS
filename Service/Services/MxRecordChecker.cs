@@ -3,6 +3,7 @@
 using System.Net.Sockets;
 
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Service.Services
 {
@@ -25,6 +26,8 @@ namespace Service.Services
                 LookupClient client = new LookupClient();
 
                 var queryResult = await client.QueryAsync(domain, QueryType.MX);
+
+               
 
                 foreach (var record in queryResult.Answers.MxRecords())
 

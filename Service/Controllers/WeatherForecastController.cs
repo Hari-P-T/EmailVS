@@ -37,7 +37,6 @@ namespace EmailAddressVerificationAPI.Controllers
 
                     if (completedTask == timeoutTask)
                     {
-                        Console.WriteLine(request.Email);
                         return null;
                     }
 

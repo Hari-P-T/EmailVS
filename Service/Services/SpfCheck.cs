@@ -5,7 +5,7 @@ namespace Service.Services
     public class SpfCheck
     {
         static LookupClient dns = new LookupClient();
-        public async Task<bool?> CheckSPFAsync(string domain)
+        public async Task<bool?> CheckSPFAsync(string? domain)
         {
             int score = 0;
             var txtRecords = (await dns.QueryAsync(domain, QueryType.TXT)).Answers.TxtRecords();

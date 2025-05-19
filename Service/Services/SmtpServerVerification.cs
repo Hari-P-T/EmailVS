@@ -36,7 +36,6 @@ namespace EmailAddressVerificationAPI.Services
 
                 string code = response.Substring(0, 3);
 
-                Console.WriteLine($"{code} : For TCP connection");
 
                 if (string.IsNullOrEmpty(response) || !(code == "220"))
 
@@ -47,6 +46,8 @@ namespace EmailAddressVerificationAPI.Services
                 response = await ReceiveResponseAsync(stream);
 
                 code = response.Substring(0, 3);
+
+                Console.WriteLine("code " + code +" Email "+ email);
 
                 if (code != "250")
 
@@ -60,6 +61,8 @@ namespace EmailAddressVerificationAPI.Services
 
                 code = response.Substring(0, 3);
 
+                Console.WriteLine("code " + code + " Email " + email);
+
                 if (code != "250" && code != "251")
 
                     return false;
@@ -71,6 +74,8 @@ namespace EmailAddressVerificationAPI.Services
                 response = await ReceiveResponseAsync(stream);
 
                 code = response.Substring(0, 3);
+
+                Console.WriteLine("code " + code + " Email " + email);
 
                 await SendCommandAsync(stream, "QUIT\r\n");
 
@@ -195,7 +200,7 @@ namespace EmailAddressVerificationAPI.Services
         {
             for(int i = 0; i < 4; i++)
             {
-                string testAddress = GenerateRandomEmail(domain);
+                string testAddress = "100randomemail"+ GenerateRandomEmail(domain);
                 var res =await CheckSingleMXAsync(testAddress, domain, mxHost);
                     if (res == false) return false;
 
@@ -225,7 +230,6 @@ namespace EmailAddressVerificationAPI.Services
             //    await SendAsync("QUIT\r\n");
 
             //    var code = rcptResponse.Substring(0, 3);
-            //    Console.WriteLine("Catch All staus code "+code);
             //    return code == "250" || code == "251" || code == "252" || code == "220";
             //}
             //catch

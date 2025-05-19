@@ -59,9 +59,7 @@ namespace EmailAddressVerificationAPI.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(domain)) return false;
-                Console.WriteLine(domain);
                 var res = await _whiteListedEmailProvider.IsWhitelisted(domain);
-                Console.WriteLine("Result "+ res);
                 return res;
 
             }
@@ -143,7 +141,6 @@ namespace EmailAddressVerificationAPI.Services
 
             string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
             bool result= Regex.IsMatch(email, pattern);
-            Console.WriteLine(result);
             return result;
         }
 
@@ -165,14 +162,15 @@ namespace EmailAddressVerificationAPI.Services
             return Regex.IsMatch(username, pattern);
         }
 
-        private bool HasMxRecords(string domain)
+        private async Task<bool> HasMxRecords(string domain)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(domain)) return false;
-                _mxRecords = _mxRecordChecker.GetMXRecordsAsync(domain).Result;
+                _mxRecords = await _mxRecordChecker.GetMXRecordsAsync(domain);
                 _parentDomain = _mxRecordChecker.GetParentDomain(_mxRecords);
-                if (_mxRecords.Count>0) return true;
+                var res = await _spfCheck.CheckSPFAsync(_parentDomain);
+                if (_mxRecords.Count>0 && res ==true) return true;
                 return false;
             }
             catch (Exception)
@@ -227,7 +225,6 @@ namespace EmailAddressVerificationAPI.Services
                     };
 
                     _responseDTO.ChecklistElements.Add(regexCheck1);
-                    Console.WriteLine("c1 done");
 
                     if (regexCheck1.IsVerified == true)
                     {
@@ -244,7 +241,6 @@ namespace EmailAddressVerificationAPI.Services
                     };
 
                     _responseDTO.ChecklistElements.Add(regexCheck2);
-                    Console.WriteLine("c2 done");
 
                     if (regexCheck2.IsVerified == true)
                     {
@@ -260,7 +256,6 @@ namespace EmailAddressVerificationAPI.Services
                     };
 
                     _responseDTO.ChecklistElements.Add(regexCheck3);
-                    Console.WriteLine("c3 done");
 
                     if (regexCheck3.IsVerified == true)
                     {
@@ -277,7 +272,6 @@ namespace EmailAddressVerificationAPI.Services
                         IsVerified = await IsTldRegistered(tld)
                     };
                     _responseDTO.ChecklistElements.Add(tldCheck);
-                    Console.WriteLine("c4 done");
 
                     if (tldCheck.IsVerified==true)
                     {
@@ -292,13 +286,12 @@ namespace EmailAddressVerificationAPI.Services
                     {
                         Name = "HasMxRecords",
                         WeightageAllocated = 10,
-                        IsVerified = HasMxRecords(domain)
+                        IsVerified = await HasMxRecords(domain)
                     };
 
                     mxRecordsCheck.ObtainedScore = (mxRecordsCheck.IsVerified == true) ? mxRecordsCheck.WeightageAllocated : 0;
 
                     _responseDTO.ChecklistElements.Add(mxRecordsCheck);
-                    Console.WriteLine("c5 done");
                     _responseDTO.TotalScore += mxRecordsCheck.ObtainedScore;
 
 
@@ -311,7 +304,6 @@ namespace EmailAddressVerificationAPI.Services
 
                     smtpCheck.ObtainedScore = (smtpCheck.IsVerified == true) ? smtpCheck.WeightageAllocated : 0;
                     _responseDTO.ChecklistElements.Add(smtpCheck);
-                    Console.WriteLine("c6 done");
                     _responseDTO.TotalScore += smtpCheck.ObtainedScore;
 
                     var spfCheck = new ChecklistElementDTO
@@ -359,7 +351,7 @@ namespace EmailAddressVerificationAPI.Services
                     {
                         Name = "IsWhiteListed",
                         WeightageAllocated = 10,
-                        IsVerified = await IsDomainWhitelisted(domain)
+                        IsVerified = await IsDomainWhitelisted(_parentDomain)
                     };
                     whiteListCheck.ObtainedScore = (whiteListCheck.IsVerified==true)?whiteListCheck.WeightageAllocated : 0;
 
@@ -432,22 +424,28 @@ namespace EmailAddressVerificationAPI.Services
                     dkimCheck.ObtainedScore = (dkimCheck.IsVerified==true)?dkimCheck.WeightageAllocated : 0;
                     _responseDTO.ChecklistElements.Add(dkimCheck);
 
+                    Console.WriteLine("At Domain Verification parent Domain Sttus "+_parentDomain);
+                var parentMXRecordResult =  await HasMxRecords(_parentDomain);
 
-                     var catchAllStatus = await _smtpServerVerification.IsCatchAllAsync(domain, _mxRecords.FirstOrDefault());
-                Console.WriteLine(catchAllStatus);
+               
 
-                if (catchAllStatus == true)
-                {
-                    _responseDTO.Status = "Catch All";
-                }
-                else if (vulgarCheck.IsVerified == true && smtpCheck.IsVerified==true && disposableDomainCheck.IsVerified==true
-                    && spfCheck.IsVerified ==true 
-                    && dmarkCheck.IsVerified ==true
-                    && blacklistCheck.IsVerified ==true
+                 var catchAllStatus = await _smtpServerVerification.IsCatchAllAsync(domain, _mxRecords.FirstOrDefault());
+                Console.WriteLine("catch All status "+catchAllStatus);
+
+               
+                 if (smtpCheck.IsVerified==true
                     && mxRecordsCheck.IsVerified ==true
+                    &&parentMXRecordResult ==true
+                    && catchAllStatus ==false
+                    && blacklistCheck.IsVerified ==true
+                    && vulgarCheck.IsVerified ==true
                     )
                 {
                     _responseDTO.Status = "Valid";
+                }
+                else if(catchAllStatus == true && parentMXRecordResult ==true ) 
+                {
+                    _responseDTO.Status = "Catch All";
                 }
                 else
                 {

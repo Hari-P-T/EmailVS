@@ -54,13 +54,13 @@ namespace EmailAddressVerificationAPI.Services
         }
 
 
-        private async Task<bool?> IsDomainWhitelisted(string domain)
+        private async Task<bool?> IsDomainWhitelisted(string parentDomain)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(domain)) return false;
-                Console.WriteLine(domain);
-                var res = await _whiteListedEmailProvider.IsWhitelisted(domain);
+                if (string.IsNullOrWhiteSpace(parentDomain)) return false;
+                Console.WriteLine(parentDomain);
+                var res = await _whiteListedEmailProvider.IsWhitelisted(parentDomain);
                 Console.WriteLine("Result "+ res);
                 return res;
 
@@ -287,12 +287,15 @@ namespace EmailAddressVerificationAPI.Services
 
 
                     //smtpVerificationResults = await _smtpServerVerification.SmtpServerAsync(emailAddress, domain);
-
-                    var mxRecordsCheck = new ChecklistElementDTO
+                    var domainMxRecordStatus = HasMxRecords(domain);
+                Console.WriteLine(_parentDomain + " - pd");
+                var parentDomainMxRecordStatus = HasMxRecords(_parentDomain);
+                var overAllMxStatus = domainMxRecordStatus && parentDomainMxRecordStatus;
+                var mxRecordsCheck = new ChecklistElementDTO
                     {
                         Name = "HasMxRecords",
                         WeightageAllocated = 10,
-                        IsVerified = HasMxRecords(domain)
+                        IsVerified = overAllMxStatus
                     };
 
                     mxRecordsCheck.ObtainedScore = (mxRecordsCheck.IsVerified == true) ? mxRecordsCheck.WeightageAllocated : 0;
@@ -314,21 +317,27 @@ namespace EmailAddressVerificationAPI.Services
                     Console.WriteLine("c6 done");
                     _responseDTO.TotalScore += smtpCheck.ObtainedScore;
 
-                    var spfCheck = new ChecklistElementDTO
+                    var spfDomainResult = await _spfCheck.CheckSPFAsync(domain);
+                Console.WriteLine("c7.0 done");
+                Console.WriteLine(_parentDomain + "- pd -");
+                //var spfParentResult = await _spfCheck.CheckSPFAsync(_parentDomain);
+                    //var spfResult = spfDomainResult == true && spfParentResult == true;
+
+                var spfCheck = new ChecklistElementDTO
                     {
                         Name = "HasSpfRecords",
                         WeightageAllocated = 10,
-                        IsVerified =  await _spfCheck.CheckSPFAsync(domain)
-                    };
+                        IsVerified = spfDomainResult
+                };
 
                     spfCheck.ObtainedScore = (spfCheck.IsVerified==true)?spfCheck.WeightageAllocated : 0;
                     _responseDTO.ChecklistElements.Add(spfCheck);
 
                     _responseDTO.TotalScore += spfCheck.ObtainedScore;
 
+                Console.WriteLine("c7.1 done");
 
-
-                    var dmarkCheck = new ChecklistElementDTO
+                var dmarkCheck = new ChecklistElementDTO
                     {
                         Name = "HasDmarcRecords",
                         WeightageAllocated = 10,
@@ -359,7 +368,7 @@ namespace EmailAddressVerificationAPI.Services
                     {
                         Name = "IsWhiteListed",
                         WeightageAllocated = 10,
-                        IsVerified = await IsDomainWhitelisted(domain)
+                        IsVerified = await IsDomainWhitelisted(_parentDomain)
                     };
                     whiteListCheck.ObtainedScore = (whiteListCheck.IsVerified==true)?whiteListCheck.WeightageAllocated : 0;
 
@@ -436,7 +445,12 @@ namespace EmailAddressVerificationAPI.Services
                      var catchAllStatus = await _smtpServerVerification.IsCatchAllAsync(domain, _mxRecords.FirstOrDefault());
                 Console.WriteLine(catchAllStatus);
 
-                if (catchAllStatus == true)
+                if (catchAllStatus == true
+                     && vulgarCheck.IsVerified == true && smtpCheck.IsVerified == true && disposableDomainCheck.IsVerified == true
+                    && spfCheck.IsVerified == true
+                    && dmarkCheck.IsVerified == true
+                    && blacklistCheck.IsVerified == true
+                    && mxRecordsCheck.IsVerified == true)
                 {
                     _responseDTO.Status = "Catch All";
                 }

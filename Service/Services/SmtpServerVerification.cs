@@ -47,6 +47,8 @@ namespace EmailAddressVerificationAPI.Services
                 response = await ReceiveResponseAsync(stream);
 
                 code = response.Substring(0, 3);
+                Console.WriteLine($"{code} : For TCP connection");
+
 
                 if (code != "250")
 
@@ -59,6 +61,8 @@ namespace EmailAddressVerificationAPI.Services
                 response = await ReceiveResponseAsync(stream);
 
                 code = response.Substring(0, 3);
+                Console.WriteLine($"{code} : For TCP connection");
+
 
                 if (code != "250" && code != "251")
 
@@ -71,6 +75,8 @@ namespace EmailAddressVerificationAPI.Services
                 response = await ReceiveResponseAsync(stream);
 
                 code = response.Substring(0, 3);
+                Console.WriteLine($"{code} : For TCP connection");
+
 
                 await SendCommandAsync(stream, "QUIT\r\n");
 

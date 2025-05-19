@@ -414,15 +414,15 @@ namespace EmailAddressVerificationAPI.Services
 
           
 
-                    var dkimCheck = new ChecklistElementDTO
-                    {
-                        Name = "HasDkimRecords",
-                        WeightageAllocated = 10,
-                        IsVerified = await DKIMCheck()
-                    };
+                    //var dkimCheck = new ChecklistElementDTO
+                    //{
+                    //    Name = "HasDkimRecords",
+                    //    WeightageAllocated = 10,
+                    //    IsVerified = await DKIMCheck()
+                    //};
 
-                    dkimCheck.ObtainedScore = (dkimCheck.IsVerified==true)?dkimCheck.WeightageAllocated : 0;
-                    _responseDTO.ChecklistElements.Add(dkimCheck);
+                    //dkimCheck.ObtainedScore = (dkimCheck.IsVerified==true)?dkimCheck.WeightageAllocated : 0;
+                    //_responseDTO.ChecklistElements.Add(dkimCheck);
 
                     Console.WriteLine("At Domain Verification parent Domain Sttus "+_parentDomain);
                 var parentMXRecordResult =  await HasMxRecords(_parentDomain);
@@ -435,10 +435,10 @@ namespace EmailAddressVerificationAPI.Services
                
                  if (smtpCheck.IsVerified==true
                     && mxRecordsCheck.IsVerified ==true
-                    &&parentMXRecordResult ==true
+                    && parentMXRecordResult == true
                     && catchAllStatus ==false
-                    && blacklistCheck.IsVerified ==true
-                    && vulgarCheck.IsVerified ==true
+                    //&& blacklistCheck.IsVerified ==true
+                    //&& vulgarCheck.IsVerified ==true
                     )
                 {
                     _responseDTO.Status = "Valid";
@@ -452,7 +452,7 @@ namespace EmailAddressVerificationAPI.Services
                     _responseDTO.Status = "InValid";
                 }
 
-                    _responseDTO.TotalScore += dkimCheck.ObtainedScore;
+                    //_responseDTO.TotalScore += dkimCheck.ObtainedScore;
                     //_responseDTO.Status = 
 
                 return _responseDTO;

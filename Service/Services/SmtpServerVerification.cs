@@ -146,37 +146,38 @@ namespace EmailAddressVerificationAPI.Services
 
             {
 
-                foreach (var mxRecord in mxRecords)
+                //foreach (var mxRecord in mxRecords)
 
-                {
+                //{
 
-                    var result = await CheckSingleMXAsync(email, domain, mxRecord);
+                //    var result = await CheckSingleMXAsync(email, domain, mxRecord);
 
-                    if (result == true)
+                //    if (result == true)
 
-                    {
+                //    {
 
-                        return true;
+                //        return true;
 
-                    }
+                //    }
 
-                    else if (result == false)
+                //    else if (result == false)
 
-                    {
+                //    {
 
-                        return false;
+                //        return false;
 
-                    }
+                //    }
 
-                    else
+                //    else
 
-                    {
+                //    {
 
-                        continue;
+                //        continue;
 
-                    }
+                //    }
 
-                }
+                //}
+                return CheckSingleMXAsync(email, domain, mxRecords[0]).Result == true ? true : false;
 
             }
 
@@ -198,15 +199,9 @@ namespace EmailAddressVerificationAPI.Services
         //catch all method
         public async Task<bool?> IsCatchAllAsync(string domain, string mxHost)
         {
-            for(int i = 0; i < 4; i++)
-            {
-                string testAddress = "100randomemail"+ GenerateRandomEmail(domain);
-                var res =await CheckSingleMXAsync(testAddress, domain, mxHost);
-                    if (res == false) return false;
+            return CheckSingleMXAsync(GenerateRandomEmail(domain), domain, mxHost).Result;
 
-            }
-
-            return true;
+            //return true;
             //using var client = new TcpClient();
             //try
             //{

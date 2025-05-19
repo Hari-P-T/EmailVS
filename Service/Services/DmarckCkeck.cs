@@ -21,8 +21,9 @@ namespace Service.Services
                 var txtRecords = result.Answers.TxtRecords();
                 if (!txtRecords.Any())
                     return 0;
-                foreach (var txt in txtRecords)
-                {
+                //foreach (var txt in txtRecords)
+                //{
+                var txt = txtRecords.FirstOrDefault();
                     string record = string.Join("", txt.Text);
                     if (record.StartsWith("v=DMARC1", StringComparison.OrdinalIgnoreCase))
                     {
@@ -42,7 +43,7 @@ namespace Service.Services
                             _ => 5
                         };
                     }
-                }
+                //}
 
                 return 0;
             }
